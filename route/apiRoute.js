@@ -1,8 +1,8 @@
 const router = require("express").Router();
-const Fitness = require("../models/fitness.js");
+const Fitness = require("../model/fitness.js");
 
-router.post("/api/workouts", ({ body }, res) => {
-  Fitness.create(body)
+router.post("/api/workouts", (req, res) => {
+  Fitness.create({})
     .then((dbFitness) => {
       res.json(dbFitness);
     })
@@ -13,9 +13,10 @@ router.post("/api/workouts", ({ body }, res) => {
 
 
 router.put("/api/workouts/:id", (req, res) => {
+  console.log(req.params.id);
   Fitness.findByIdAndUpdate(
-    req.paramas.id,
-    { $push: { excercises: req.body } },
+    req.params.id,
+    { $push: { exercises: req.body } },
     { new: true }
   )
     .then((dbFitness) => {
@@ -27,9 +28,16 @@ router.put("/api/workouts/:id", (req, res) => {
 });
 
 router.get("/api/workouts", (req, res) => {
-  Fitness.find({})
-    .sort({ date: -1 })
-    .then((dbFitness) => {
+  Fitness.aggregate([
+    {
+      $addFields: {
+        totalDuration: {
+          $sum: "$exercises.duration",
+        },
+      },
+    },
+  ])
+   .then((dbFitness) => {
       res.json(dbFitness);
     })
     .catch((err) => {
@@ -38,7 +46,7 @@ router.get("/api/workouts", (req, res) => {
 });
 
 router.get("/api/workouts/range", (req, res) => {
-  Fitness.find([
+  Fitness.aggregate([
     {
       $addFields: {
         totalDuration: {
@@ -49,7 +57,6 @@ router.get("/api/workouts/range", (req, res) => {
   ])
     .sort({ _id: -1 })
     .limit(7)
-
     .then((dbFitness) => {
       res.json(dbFitness);
     })

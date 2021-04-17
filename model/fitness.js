@@ -36,7 +36,7 @@ const fitnessSchema = new Schema({
 
   day: {
     type: Date,
-    default: Date.now,
+    default: ()=>new Date,
   },
 });
 
